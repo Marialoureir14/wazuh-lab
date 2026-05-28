@@ -85,26 +85,295 @@
   </rule>
 
   <rule id="100199" level="7">
-  <if_sid>31101</if_sid>
-  <url>/lab1-demo</url>
-  <description>lab1 demo: someone hit /lab1-demo</description>
-</rule>
+    <if_sid>31101</if_sid>
+    <url>/lab1-demo</url>
+    <description>lab1 demo: someone hit /lab1-demo</description>
+  </rule>
 
-<rule id="100200" level="10">
-  <if_sid>31100</if_sid>
-  <url>etc/passwd|etc/shadow</url>
-  <description>Possible Local File Inclusion attempt</description>
-</rule>
+  <rule id="100200" level="10">
+    <if_sid>31100</if_sid>
+    <url>etc/passwd|etc/shadow</url>
+    <description>Possible Local File Inclusion attempt</description>
+  </rule>
 
-<rule id="100201" level="10" frequency="8" timeframe="30">
-  <if_matched_sid>31101</if_matched_sid>
-  <description>Web Reconnaissance: Multiple 404 errors from same IP</description>
-</rule>
+  <rule id="100201" level="10" frequency="8" timeframe="30">
+    <if_matched_sid>31101</if_matched_sid>
+    <description>Web Reconnaissance: Multiple 404 errors from same IP</description>
+  </rule>
 
-<rule id="100202" level="0">
-  <if_sid>31101</if_sid>
-  <url>^/status$</url>
-  <description>Suppress 404 for /status health-check path</description>
-</rule>
+  <rule id="100202" level="0">
+    <if_sid>31101</if_sid>
+    <url>^/status$</url>
+    <description>Suppress 404 for /status health-check path</description>
+  </rule>
+
+  <!-- Rule to silence Web server 500 error code (Internal Error)-->
+  <!-- (previous rule)
+  {
+    "data": {
+      "protocol": "GET",
+      "id": "500",
+      "url": "/cgi-bin/status"
+    },
+    "rule": {
+      "description": "Web server 500 error code (Internal Code)",
+      "id": "31122"
+    }
+  }
+  <rule id="100300" level="0">
+    <if_sid>31122</if_sid>
+    <field name="data.url">^/cgi-bin/status$</field>
+    <field name="full_log" type="pcre2">^((?!\(\)\s*\{\s*:\s*;\s*\}\s*;).)*$</field>
+    <description>Silence standard 500 errors for /cgi-bin/status noise</description>  
+  </rule>
+  <rule id="100300" level="0">
+    <if_sid>31122</if_sid>
+    <field name="data.url" type="pcre2">^/cgi-bin/(status|greet)</field>
+    <description>Silence standard 500 errors for /cgi-bin/status noise</description>  
+  </rule>
+  -->
+
+  <!-- Rule to silence HTTP: POST /login - authentication failed -->
+  <!-- (previous rule)
+  {
+    "data": {
+      "protocol": "POST",
+      "id": "401",
+      "url": "/login"
+    }
+    "rule": {
+      "description": "HTTP: POST /login - authentication failed",
+      "id": 100163
+    }
+    "full_log": "172.20.0.3 - - [26/May/2026:08:20:39 +0000] "POST /login HTTP/1.1" 401 186 "-" "Mozilla/5.0 (compatible; scanner/2.1)"",
+
+  }
+  -->
+  
+  <rule id="100301" level="0">
+    <if_sid>100163</if_sid>
+    <match>scanner/2.1</match>
+    <description>Silence automated scanner on login endpoint</description>
+  </rule>
+
+  <!-- Rule to silence HTTP: POST /login - authentication successful -->
+  <!-- (previous rule)
+  {
+    "data": {
+      "protocol": "POST",
+      "id": "200",
+      "url": "/login"
+    }
+    "rule": {
+      "description": "HTTP: POST /login - authentication successful",
+      "id": 100164
+    }
+    "full_log": "172.20.0.3 - - [26/May/2026:08:20:39 +0000] "POST /login HTTP/1.1" 200 177 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"",
+  }
+  -->
+  <rule id="100302" level="0" overwrite="yes">
+    <if_sid>100164</if_sid>
+    <match>172.20.0.3</match>
+    <description>Silence repetitive successful login noise from attack framework IP</description>
+  </rule>
+
+  <!-- Rule to silence CorpNet Portal: Login successed for user bov -->
+  <!-- (previous rule)
+  {
+    "data": {
+      "dstuser": "bob" 
+    }
+    "rule": {
+      "description": "CorpNet Portal: login succeeded for user bob",
+      "id": 100166
+    }
+    "full_log": "May 26 09:36:53 victim corpnet-login[18]: user=bob result=success src=127.0.0.1",
+  }
+  -->
+  <rule id="100303" level="0" overwrite="yes">
+    <if_sid>100166</if_sid>
+    <match>user=bob result=success</match>
+    <description>Silence automated login success noise for bob</description>
+  </rule>
+
+  <!-- Rule to silence CorpNet Portal: Login successed for user admin -->
+  <!-- (previous rule)
+  {
+    "data": {
+      "dstuser": "bob" 
+    }
+    "rule": {
+      "description": "CorpNet Portal: login succeeded for user admin",
+      "id": 100166
+    }
+    "full_log": "May 26 09:36:53 victim corpnet-login[18]: user=admin result=success src=127.0.0.1",
+  }
+  -->
+  <rule id="100304" level="0" overwrite="yes">
+    <if_sid>100166</if_sid>
+    <match>user=admin result=success</match>
+    <description>Silence automated login success noise for admin</description>
+  </rule>
+
+  <rule id="100305" level="0" overwrite="yes">
+    <if_sid>100166</if_sid>
+    <match>user=diana result=success</match>
+    <description>Silence automated login success noise for diana</description>
+  </rule>
+
+  <rule id="100306" level="0" overwrite="yes">
+    <if_sid>100166</if_sid>
+    <match>user=charlie result=success</match>
+    <description>Silence automated login success noise for charlie</description>
+  </rule>
+
+  <rule id="100307" level="0" overwrite="yes">
+    <if_sid>100166</if_sid>
+    <match>user=root result=failure</match>
+    <description>Silence automated login success noise for root</description>
+  </rule>
+
+  <rule id="100308" level="0" overwrite="yes">
+    <if_sid>100166</if_sid>
+    <match>user=alice result=success</match>
+    <description>Silence automated login success noise for alice</description>
+  </rule>
+
+  <!-- Rule to silence Web server 500 error code (Internal Error) -->
+  <!-- (previous rule)
+  {
+    "data": {
+      "protocol": "GET",
+      "id": "500",
+      "url": "/cgi-bin/greet?name=Alice" or ?name=Bob
+    }
+    "rule": {
+      "description": "Web server 500 error code (Internal Error).",
+      "id": 31122
+    }
+    "full_log": "172.20.0.3 - - [26/May/2026:09:36:29 +0000] \"GET /cgi-bin/greet?name=Alice HTTP/1.1\" 500 796 \"-\" \"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0\"",
+  }
+  
+  <rule id="100304" level="0">
+    <if_sid>31122</if_sid>
+    <field name="data.url" type="pcre2">^/cgi-bin/greet</field>
+    <field name="full_log" type="pcre2">^((?!\(\)\s*\{\s*:\s*;\s*\}\s*;).)*$</field>
+    <description>Silence standard 500 errors for greet endpoint noise</description>
+  </rule>
+
+  <rule id="100304" level="0">
+    <if_sid>31122</if_sid>
+    <field name="full_log" type="pcre2">GET /cgi-bin/greet</field>
+    <description>Silence standard 500 errors for greet endpoint noise</description>
+  </rule>
+  -->
+
+  <!-- Rule to silence Web server 500 error code (Internal Error) -->
+  <!-- (previous rule)
+  {
+    "rule": {
+      "description": "CorpNet Portal: login failed for user admin",
+      "id": 100165
+    }
+    "full_log": "May 26 15:04:19 victim corpnet-login[18]: user=admin result=failure src=127.0.0.1",
+  }
+  -->
+  <rule id="100309" level="0" overwrite="yes">
+    <if_sid>100165</if_sid>
+    <match>result=failure</match>
+    <description>Silence automated login brute force failure noise</description>
+  </rule>
+
+  <!-- CIS events -->
+
+  <rule id="100400" level="0">
+    <if_sid>19003, 19004, 19007, 19008, 19009</if_sid>
+    <description>Suppress: CIS Benchmark check</description>
+  </rule>
+
+  <!-- Attacks -->
+
+  <!-- ShellShock -->
+  <rule id="31168" level="12" overwrite="yes">
+    <if_sid>31166</if_sid>
+    <match>() {</match>
+    <description>Shellshock: Shellshock attack attempt detected</description>
+    <mitre>
+      <id>T1190</id> </mitre>
+    <group>attack,web,shellshock,wazuh-lab,</group>
+  </rule>
+
+  <!-- Path Traversal -->
+  <rule id="100120" level="12" overwrite="yes">
+    <if_sid>31100</if_sid>
+    <regex>\.%2e/|/%2e\.</regex>
+    <description>Path Traversal attempt: encoded '..' segment observed</description>
+    <mitre>
+      <id>T1190</id>
+    </mitre>
+    <group>attack,web,path_traversal,wazuh-lab,</group>
+  </rule>
+
+  <!-- Log4Shell -->
+  <rule id="100130" level="12" overwrite="yes">
+    <match>jndi:</match>
+    <description>Log4Shell: Application log line contains JNDI lookup attempt</description>
+    <mitre>
+      <id>T1190</id>
+    </mitre>
+    <group>attack,web,log4shell,wazuh-lab,</group>
+  </rule>
+
+  <!-- Pwnkit -->
+  <rule id="100140" level="13" overwrite="yes">
+    <program_name>pkexec</program_name>
+    <match>GCONV_PATH=</match>
+    <description>PwnKit: Local Privilege Escalation exploit execution detected via pkexec</description>
+    <mitre>
+      <id>T1068</id> </mitre>
+    <group>attack,priv_escalation,pwnkit,wazuh-lab,</group>
+  </rule>
+
+  <!-- Backdoor -->
+  <rule id="100150" level="10" overwrite="yes">
+    <if_sid>550,554</if_sid>
+    <field name="file">/etc/passwd</field>
+    <description>FIM: /etc/passwd file changed - Potential local account creation/backdoor</description>
+    <mitre>
+      <id>T1136.001</id> </mitre>
+    <group>attack,persistence,backdoor,wazuh-lab,</group>
+  </rule>
+
+  <!-- Heartbleed -->
+  <rule id="100162" level="12" overwrite="yes">
+    <if_sid>31100</if_sid>
+    <url>/reports/submit/</url>
+    <description>Heartbleed Simulation: Malicious web exploit payload upload attempt</description>
+    <mitre>
+      <id>T1190</id> 
+    </mitre>
+    <group>web,accesslog,attack,wazuh-lab,</group>
+  </rule>
+
+  <rule id="100160" level="12" overwrite="yes">
+    <if_sid>554</if_sid> 
+    <field name="file">^/var/lib/reports/</field>
+    <description>Heartbleed Simulation: Malicious artifact file dropped in reports directory</description>
+    <mitre>
+      <id>T1105</id> 
+    </mitre>
+    <group>syscheck,fim,persistence,wazuh-lab,</group>
+  </rule>
+
+  <!-- Exfil -->
+  <rule id="100170" level="12" overwrite="yes">
+    <if_sid>100100</if_sid> 
+    <program_name>exfil</program_name>
+    <match>tar -cf</match>
+    <description>Exfiltration: Data staging collection using tar archive utility</description>
+    <mitre>
+      <id>T1560.001</id> </mitre>
+    <group>attack,collection,exfiltration,wazuh-lab,</group>
+  </rule>
 
 </group>
